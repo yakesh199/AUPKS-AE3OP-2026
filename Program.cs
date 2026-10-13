@@ -1,29 +1,62 @@
-// Student Task Manager - final result of the .NET + C# Console Tutorial (Parts 1-6)
-
-const int MaxTasks = 10;
 const string AppName = "Student Task Manager";
+const int MaxTasks = 10;
 
-List<TaskItem> tasks = new List<TaskItem>();
+Console.WriteLine(AppName);
+Console.WriteLine("====================");
+Console.WriteLine("Welcome to the application!");
+Console.WriteLine();
 
-// Part 1-2: Welcome and input
-ShowTitle();
+Console.Write("Write() stays on the same line... ");
+Console.Write("see?");
+Console.WriteLine();
+Console.WriteLine("WriteLine() moves to the next line after printing.");
 
-Console.Write("Enter your name: ");
-string name = Console.ReadLine()?.Trim() ?? "";
-if (string.IsNullOrWhiteSpace(name))
+Console.WriteLine();
+string studentName = ReadText("Enter your name: ");
+int age = ReadInt("Enter your age: ");
+string courseName = ReadText("Enter your course name: ");
+bool knowsCSharp = ReadYesNo("Do you already know C#? (y/n): ");
+int taskGoal = ReadInt("How many tasks do you want to complete today? ");
+double availableHours = ReadDouble("How many hours do you have available? ");
+
+Console.WriteLine();
+Console.WriteLine($"Hello {studentName}!");
+Console.WriteLine($"Age: {age}");
+Console.WriteLine($"Course: {courseName}");
+Console.WriteLine($"Already knows C#: {knowsCSharp}");
+Console.WriteLine($"Your goal is {taskGoal} tasks.");
+Console.WriteLine($"You have {availableHours} hours available.");
+Console.WriteLine($"Application: {AppName}");
+Console.WriteLine($"Maximum tasks allowed per day: {MaxTasks}");
+
+if (taskGoal > MaxTasks)
 {
-    name = "Student";
+    Console.WriteLine($"Your goal is above the maximum of {MaxTasks}. Be realistic!");
 }
 
-Console.WriteLine($"Hello {name}! Welcome to {AppName}.");
+int completedTasks = ReadInt("How many tasks have you completed today? ");
 
-// Part 4-5: Main application loop
+if (completedTasks == 0)
+{
+    Console.WriteLine("Time to get started!");
+}
+else if (completedTasks < 3)
+{
+    Console.WriteLine("Good start. Keep going!");
+}
+else
+{
+    Console.WriteLine("Great progress!");
+}
+
+List<string> tasks = new List<string>();
 bool running = true;
+
+ShowTitle();
 
 while (running)
 {
     ShowMenu();
-
     int option = ReadInt("Choose: ");
 
     switch (option)
@@ -46,17 +79,14 @@ while (running)
 
         case 0:
             running = false;
+            ShowMessage("Goodbye!");
             break;
 
         default:
-            Console.WriteLine("Invalid option.");
+            ShowMessage("Invalid option.");
             break;
     }
 }
-
-Console.WriteLine($"Goodbye, {name}!");
-
-// ---------- Methods (Part 5) ----------
 
 void ShowTitle()
 {
@@ -80,62 +110,36 @@ void ShowMessage(string message)
     Console.WriteLine($"[INFO] {message}");
 }
 
-// Part 2 + challenge 1: safe integer input that never crashes
-int ReadInt(string prompt)
+int GetTaskCount(List<string> taskList)
 {
-    while (true)
-    {
-        Console.Write(prompt);
-
-        if (int.TryParse(Console.ReadLine(), out int value))
-        {
-            return value;
-        }
-
-        Console.WriteLine("Invalid input. Please enter a number.");
-    }
+    return taskList.Count;
 }
 
-// Part 6: enum input
-TaskPriority ReadPriority()
+void ShowTasks(List<string> taskList)
 {
-    Console.WriteLine("Priority: 1. Low   2. Medium   3. High");
-    int choice = ReadInt("Choose priority: ");
-
-    return choice switch
+    if (taskList.Count == 0)
     {
-        1 => TaskPriority.Low,
-        2 => TaskPriority.Medium,
-        3 => TaskPriority.High,
-        _ => TaskPriority.Medium
-    };
-}
-
-void AddTask(List<TaskItem> tasks)
-{
-    // Part 6: constant limit
-    if (tasks.Count >= MaxTasks)
-    {
-        Console.WriteLine("Maximum number of tasks reached.");
+        Console.WriteLine("No tasks available.");
         return;
     }
 
-    Console.Write("Enter task: ");
-    string? taskName = Console.ReadLine();
-
-    // Challenge 2: reject empty or whitespace-only tasks
-    if (string.IsNullOrWhiteSpace(taskName))
+    for (int i = 0; i < taskList.Count; i++)
     {
-        Console.WriteLine("Task cannot be empty.");
+        Console.WriteLine($"{i + 1}. {taskList[i]}");
+    }
+}
+
+void AddTask(List<string> taskList)
+{
+    if (taskList.Count >= MaxTasks)
+    {
+        ShowMessage("Maximum number of tasks reached.");
         return;
     }
 
+    string title = ReadText("Enter task: ");
     TaskPriority priority = ReadPriority();
-    tasks.Add(new TaskItem(taskName.Trim(), priority));
 
-    ShowMessage("Task added.");
-
-    // Part 6: enum with switch
     switch (priority)
     {
         case TaskPriority.Low:
@@ -150,70 +154,99 @@ void AddTask(List<TaskItem> tasks)
             Console.WriteLine("Prioritize this task.");
             break;
     }
+
+    taskList.Add($"{title} [{priority}]");
+    ShowMessage("Task added.");
 }
 
-void ShowTasks(List<TaskItem> tasks)
+void RemoveTask(List<string> taskList)
 {
-    if (tasks.Count == 0)
-    {
-        Console.WriteLine("No tasks available.");
-        return;
-    }
-
-    for (int i = 0; i < tasks.Count; i++)
-    {
-        Console.WriteLine($"{i + 1}. [{tasks[i].Priority}] {tasks[i].Name}");
-    }
-}
-
-void RemoveTask(List<TaskItem> tasks)
-{
-    if (tasks.Count == 0)
+    if (taskList.Count == 0)
     {
         Console.WriteLine("No tasks to remove.");
         return;
     }
 
-    ShowTasks(tasks);
-
+    ShowTasks(taskList);
     int number = ReadInt("Task to remove: ");
 
-    if (number < 1 || number > tasks.Count)
+    if (number < 1 || number > taskList.Count)
     {
-        Console.WriteLine("Invalid task number.");
+        ShowMessage("Invalid task number.");
         return;
     }
 
-    // The user counts from 1, the list counts from 0
-    tasks.RemoveAt(number - 1);
-
+    taskList.RemoveAt(number - 1);
     ShowMessage("Task removed.");
 }
 
-void ShowTaskCount(List<TaskItem> tasks)
+void ShowTaskCount(List<string> taskList)
 {
-    int count = tasks.Count;
-
+    int count = GetTaskCount(taskList);
     Console.WriteLine($"You currently have {count} tasks.");
     Console.WriteLine($"Maximum allowed: {MaxTasks}");
     Console.WriteLine($"Remaining capacity: {MaxTasks - count}");
+}
 
-    // Part 3: if / else if / else
-    if (count == 0)
+string ReadText(string prompt)
+{
+    Console.Write(prompt);
+    return Console.ReadLine() ?? "";
+}
+
+int ReadInt(string prompt)
+{
+    while (true)
     {
-        Console.WriteLine("Time to get started!");
-    }
-    else if (count < 3)
-    {
-        Console.WriteLine("Good start. Keep going!");
-    }
-    else
-    {
-        Console.WriteLine("Great progress!");
+        Console.Write(prompt);
+        if (int.TryParse(Console.ReadLine(), out int value))
+        {
+            return value;
+        }
+        Console.WriteLine("Please enter a whole number.");
     }
 }
 
-// ---------- Types (Part 6) ----------
+double ReadDouble(string prompt)
+{
+    while (true)
+    {
+        Console.Write(prompt);
+
+        string text = (Console.ReadLine() ?? "").Replace(',', '.');
+        if (double.TryParse(text, System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out double value))
+        {
+            return value;
+        }
+        Console.WriteLine("Please enter a number.");
+    }
+}
+
+bool ReadYesNo(string prompt)
+{
+    while (true)
+    {
+        Console.Write(prompt);
+        string answer = (Console.ReadLine() ?? "").Trim().ToLower();
+        if (answer == "y" || answer == "yes") return true;
+        if (answer == "n" || answer == "no") return false;
+        Console.WriteLine("Please answer y or n.");
+    }
+}
+
+TaskPriority ReadPriority()
+{
+    while (true)
+    {
+        int choice = ReadInt("Priority (1 = Low, 2 = Medium, 3 = High): ");
+        if (choice >= 1 && choice <= 3)
+        {
+            return (TaskPriority)(choice - 1);
+        }
+        Console.WriteLine("Please choose 1, 2 or 3.");
+    }
+}
 
 enum TaskPriority
 {
@@ -221,5 +254,3 @@ enum TaskPriority
     Medium,
     High
 }
-
-record TaskItem(string Name, TaskPriority Priority);
